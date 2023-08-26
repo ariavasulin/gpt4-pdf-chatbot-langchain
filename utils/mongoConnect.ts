@@ -1,23 +1,25 @@
-const { MongoClient } = require('mongodb');
+import { MongoClient } from 'mongodb';
 
+const uri = process.env.MONGO_URI;
 let cachedDb = null;
 
-async function connectToDatabase(uri) {
+export async function connectToDatabase() {
     if (cachedDb) {
-        return cachedDb;
+        console.log("Using cached database connection");
+        return { client: cachedDb.client, db: cachedDb.db };
     }
-    console.log(uri)
+
+    console.log("Setting up new database connection");
     const client = await MongoClient.connect(uri, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
     });
 
-    const db = await client.db(new URL(uri).pathname.substr(1)); // extract DB name from the URI
+    const db = client.db('testDatabase');
 
-    cachedDb = db;
-    return db;
+    console.log("Database selected:", db.s.databaseName);
+
+    cachedDb = { client, db };
+
+    return { client, db };
 }
-
-module.exports = {
-    connectToDatabase,
-};
