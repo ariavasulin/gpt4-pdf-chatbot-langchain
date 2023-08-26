@@ -1,3 +1,4 @@
+import { connectToDatabase } from '../../utils/mongoConnect';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { PineconeStore } from 'langchain/vectorstores/pinecone';
@@ -57,7 +58,20 @@ export default async function handler(
       chat_history: pastMessages
     });
 
+    
     console.log('response', response);
+    
+    // MongoDB Integration
+    const { db } = await connectToDatabase(process.env.MONGO_URI);
+    const collection = db.collection('testCollection');
+    
+    // Storing the question and response in MongoDB
+    await collection.insertOne({
+        question: sanitizedQuestion,
+        response: response,
+        timestamp: new Date()
+    });
+    
     res.status(200).json(response);
   } catch (error: any) {
     console.log('error', error);
